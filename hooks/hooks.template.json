@@ -1,5 +1,18 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${HOME}/.codex/hooks/project-profile-startup.py",
+            "timeout": 5,
+            "statusMessage": "Checking project profile"
+          }
+        ]
+      }
+    ],
     "PermissionRequest": [
       {
         "matcher": ".*",

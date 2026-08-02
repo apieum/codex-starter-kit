@@ -28,6 +28,9 @@ for path in sorted((root / "skills").glob("*/SKILL.md")):
     text = path.read_text(errors="replace")
     if not text.startswith("---"):
         errors.append(f"{path}: missing YAML frontmatter")
+for skill_name in ["profile", "context"]:
+    if not (root / "skills" / skill_name / "SKILL.md").exists():
+        errors.append(f"skills/{skill_name}/SKILL.md: missing required starter control skill")
 for path in sorted((root / "plugins").glob("*/.codex-plugin/plugin.json")):
     try:
         plugin = json.loads(path.read_text(encoding="utf-8"))
@@ -92,6 +95,7 @@ for hook_name in [
     "handoff-permission-request.py",
     "handoff-post-tool-use.py",
     "handoff-intake-classifier.py",
+    "project-profile-startup.py",
 ]:
     try:
         ast.parse((root / "hooks" / hook_name).read_text(encoding="utf-8"))
@@ -107,7 +111,7 @@ try:
 except Exception as exc:
     errors.append(f"hooks/hooks.template.json: {exc}")
 else:
-    for event in ["PermissionRequest", "UserPromptSubmit", "PreToolUse", "PostToolUse"]:
+    for event in ["SessionStart", "PermissionRequest", "UserPromptSubmit", "PreToolUse", "PostToolUse"]:
         if event not in hooks_config.get("hooks", {}):
             errors.append(f"hooks/hooks.template.json: missing {event} hook")
 rules_path = root / "rules" / "default.rules"
