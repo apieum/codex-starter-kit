@@ -7,7 +7,16 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from project_profile import compact_skill_descriptions, detect_capabilities, load_profile, save_profile
+from project_profile import (
+    compact_skill_descriptions,
+    detect_capabilities,
+    detect_domains,
+    load_capability_catalog,
+    load_profile,
+    render_project_capabilities,
+    save_profile,
+    write_project_capabilities,
+)
 
 
 class ProjectProfileTests(unittest.TestCase):
@@ -16,7 +25,8 @@ class ProjectProfileTests(unittest.TestCase):
             root = Path(directory)
             (root / "pyproject.toml").write_text('[project]\nname = "demo"\ndependencies = ["fastapi"]\n')
 
-            self.assertEqual(detect_capabilities(root), ["backend", "web"])
+            self.assertEqual(detect_capabilities(root), ["python"])
+            self.assertEqual(detect_domains(root), ["backend", "web"])
 
     def test_persists_project_profile_without_config_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -35,7 +45,11 @@ class ProjectProfileTests(unittest.TestCase):
             root = Path(directory)
             skill = root / "python-pro" / "SKILL.md"
             skill.parent.mkdir()
-            source = "---\nname: python-pro\ndescription: Write modern Python applications with architecture, testing, async behavior, and deployment guidance.\n---\n\n# Python\n"
+            source = (
+                "---\nname: python-pro\n"
+                "description: Write modern Python applications with architecture, testing, async behavior, "
+                "and deployment guidance.\n---\n\n# Python\n"
+            )
             skill.write_text(source)
 
             result = compact_skill_descriptions(root, root / "descriptions.json")
@@ -57,6 +71,37 @@ class ProjectProfileTests(unittest.TestCase):
             compact_skill_descriptions(root, backup)
 
             self.assertIn("Original detailed description.", backup.read_text())
+
+    def test_capability_catalog_uses_top_level_names(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            catalog = root / "capabilities.toml"
+            catalog.write_text(
+                '[python]\ndetect_files = ["pyproject.toml"]\nharness = ["pytest"]\n\n[meta]\nversion = "1"\n',
+                encoding="utf-8",
+            )
+
+            self.assertEqual(sorted(load_capability_catalog(catalog)), ["python"])
+
+    def test_project_capabilities_render_top_level_sections(self) -> None:
+        text = render_project_capabilities(
+            {"python": {"detect_files": ["pyproject.toml"], "mcp": [], "harness": ["pytest"]}},
+            ["python"],
+        )
+
+        self.assertIn("[python]", text)
+        self.assertNotIn("[capabilities.python]", text)
+
+    def test_writes_project_capability_file_from_default_catalog(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            path = write_project_capabilities(root, ["python"])
+
+            text = path.read_text(encoding="utf-8")
+            self.assertEqual(path, root / ".codex" / "capabilities.toml")
+            self.assertIn("[python]", text)
+            self.assertIn("harness =", text)
 
 
 if __name__ == "__main__":

@@ -20,7 +20,10 @@ def main() -> int:
     root = Path(str(payload.get("cwd") or Path.cwd()))
     profile_path = root / ".codex" / "starter-profile.json"
     if not profile_path.exists():
-        emit("Project profile is not configured. Ask whether this project should enable auto-detection, then use $profile setup after confirmation.")
+        emit(
+            "Project profile is not configured. Ask whether this project should enable auto-detection, "
+            "then use $profile setup after confirmation."
+        )
         return 0
     try:
         profile = json.loads(profile_path.read_text(encoding="utf-8"))
@@ -29,7 +32,20 @@ def main() -> int:
         return 0
     capabilities = ", ".join(profile.get("capabilities", ["lite"]))
     context_mode = profile.get("context_mode", "compact")
-    emit(f"Project profile: capabilities={capabilities}; skill catalogue mode={context_mode}. Use $profile status or $context status to inspect it.")
+    harness_path = root / ".gauntlet"
+    harness = "disabled" if (root / ".harness").exists() else "enabled"
+    if harness_path.exists():
+        try:
+            phase = json.loads(harness_path.read_text(encoding="utf-8")).get("phase", "idle")
+        except (OSError, json.JSONDecodeError):
+            phase = "invalid"
+    else:
+        phase = "idle"
+    emit(
+        f"Project profile: capabilities={capabilities}; skill catalogue mode={context_mode}; "
+        f"harness={harness}, phase={phase}. "
+        "Use $profile status, $context status, or $harness status to inspect it."
+    )
     return 0
 
 

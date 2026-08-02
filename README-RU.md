@@ -24,7 +24,7 @@
   <p>
     <img alt="OpenAI Codex CLI" src="https://img.shields.io/badge/OpenAI-Codex%20CLI-111111">
     <img alt="Agents" src="https://img.shields.io/badge/62-Custom%20Agents-2563eb">
-    <img alt="Skills" src="https://img.shields.io/badge/101-Skills-7c3aed">
+    <img alt="Skills" src="https://img.shields.io/badge/105-Skills-7c3aed">
     <img alt="MCP" src="https://img.shields.io/badge/MCP-Context7%20%7C%20Vue%20%7C%20Nuxt-16a34a">
     <img alt="Hooks" src="https://img.shields.io/badge/Hooks-Safety%20Guard-f97316">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-059669">
@@ -38,7 +38,7 @@
 Внутри уже лежат:
 
 - 62 кастомных Codex-агента в `agents/*.toml`
-- 101 reusable skill в `skills/*/SKILL.md`
+- 105 reusable skill в `skills/*/SKILL.md`
 - глобальные правила работы Codex в `templates/AGENTS.md`
 - безопасный shell hook против опасных команд
 - правила автоматического одобрения безопасных команд в `rules/default.rules`
@@ -177,7 +177,7 @@ python3 scripts/validate-pack.py
 | --- | --- | --- |
 | `~/.codex/AGENTS.md` | глобальные рабочие правила | единое поведение Codex во всех проектах |
 | `~/.codex/agents/` | 62 кастомных subagents | роли для разработки, ревью, QA, DevOps, продукта, дизайна и копирайтинга |
-| `~/.agents/skills/` | 101 skill | reusable инструкции для задач и доменов |
+| `~/.agents/skills/` | 105 skill | reusable инструкции для задач и доменов |
 | `~/.codex/hooks/` | safety и handoff hook scripts | классификация пользовательских prompts, блокировка опасных shell-команд, автоодобрение известных безопасных permission prompts и подсказки верификации после install/failure |
 | `~/.codex/hooks.json` | hook config | подключение UserPromptSubmit, PermissionRequest, PreToolUse и PostToolUse hooks к Codex |
 | `~/.codex/rules/` | правила одобрения команд | автоодобрение частых read-only команд для разработки, Linux-диагностики, package metadata и infra inspection |

@@ -103,6 +103,8 @@ def install_runtime_support(*, dry_run: bool, backup: bool, codex_home: Path) ->
     if not dry_run:
         runtime_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO_ROOT / "scripts" / "project_profile.py", runtime_dir / "project_profile.py")
+        shutil.copy2(REPO_ROOT / "hooks" / "tdd-harness.py", runtime_dir / "tdd-harness.py")
+        shutil.copy2(REPO_ROOT / "templates" / "capabilities.toml", runtime_dir / "capabilities.toml")
 
 
 def install_rules(*, dry_run: bool, backup: bool, codex_home: Path) -> None:

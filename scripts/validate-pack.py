@@ -28,9 +28,21 @@ for path in sorted((root / "skills").glob("*/SKILL.md")):
     text = path.read_text(errors="replace")
     if not text.startswith("---"):
         errors.append(f"{path}: missing YAML frontmatter")
-for skill_name in ["profile", "context"]:
+for skill_name in ["profile", "context", "harness"]:
     if not (root / "skills" / skill_name / "SKILL.md").exists():
         errors.append(f"skills/{skill_name}/SKILL.md: missing required starter control skill")
+try:
+    capability_config = tomllib.loads((root / "templates" / "capabilities.toml").read_text(encoding="utf-8"))
+except Exception as exc:
+    errors.append(f"templates/capabilities.toml: {exc}")
+else:
+    for capability_name in ["python", "node"]:
+        capability = capability_config.get(capability_name)
+        if not isinstance(capability, dict):
+            errors.append(f"templates/capabilities.toml: missing [{capability_name}] capability")
+            continue
+        if not isinstance(capability.get("harness"), list):
+            errors.append(f"templates/capabilities.toml: [{capability_name}].harness must be a list")
 for path in sorted((root / "plugins").glob("*/.codex-plugin/plugin.json")):
     try:
         plugin = json.loads(path.read_text(encoding="utf-8"))
@@ -96,6 +108,7 @@ for hook_name in [
     "handoff-post-tool-use.py",
     "handoff-intake-classifier.py",
     "project-profile-startup.py",
+    "tdd-harness.py",
 ]:
     try:
         ast.parse((root / "hooks" / hook_name).read_text(encoding="utf-8"))
@@ -114,6 +127,9 @@ else:
     for event in ["SessionStart", "PermissionRequest", "UserPromptSubmit", "PreToolUse", "PostToolUse"]:
         if event not in hooks_config.get("hooks", {}):
             errors.append(f"hooks/hooks.template.json: missing {event} hook")
+    rendered_hooks = json.dumps(hooks_config)
+    if "tdd-harness.py" not in rendered_hooks:
+        errors.append("hooks/hooks.template.json: missing tdd-harness.py hook")
 rules_path = root / "rules" / "default.rules"
 if not rules_path.exists():
     errors.append("rules/default.rules: missing command approval rules")

@@ -24,7 +24,7 @@
   <p>
     <img alt="OpenAI Codex CLI" src="https://img.shields.io/badge/OpenAI-Codex%20CLI-111111">
     <img alt="Agents" src="https://img.shields.io/badge/62-Custom%20Agents-2563eb">
-    <img alt="Skills" src="https://img.shields.io/badge/101-Skills-7c3aed">
+    <img alt="Skills" src="https://img.shields.io/badge/105-Skills-7c3aed">
     <img alt="MCP" src="https://img.shields.io/badge/MCP-Context7%20%7C%20Vue%20%7C%20Nuxt-16a34a">
     <img alt="Hooks" src="https://img.shields.io/badge/Hooks-Safety%20Guard-f97316">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-059669">
@@ -38,7 +38,7 @@
 It includes:
 
 - 62 custom Codex agents in `agents/*.toml`
-- 101 reusable skills in `skills/*/SKILL.md`
+- 105 reusable skills in `skills/*/SKILL.md`
 - global Codex working rules in `templates/AGENTS.md`
 - a shell safety hook for risky commands
 - default command approval rules in `rules/default.rules`
@@ -177,10 +177,10 @@ Restart Codex after installation. Global instructions, agents, skills, hooks, an
 | --- | --- | --- |
 | `~/.codex/AGENTS.md` | global working rules | consistent Codex behavior across projects |
 | `~/.codex/agents/` | 62 custom subagents | roles for development, review, QA, DevOps, product, design, and copywriting |
-| `~/.agents/skills/` | 101 skills | reusable instructions for tasks and domains |
+| `~/.agents/skills/` | 105 skills | reusable instructions for tasks and domains |
 | `~/.codex/hooks/` | safety and handoff hook scripts | checks the project profile, classifies prompts, guards risky shell commands, and nudges verification |
 | `~/.codex/hooks.json` | hook config | connects SessionStart, UserPromptSubmit, PermissionRequest, PreToolUse, and PostToolUse hooks to Codex |
-| `~/.codex/starter-kit/` | profile manager | backs `/profile` and `/context` |
+| `~/.codex/starter-kit/` | starter runtime scripts | backs `$profile`, `$context`, and `$harness` |
 | `~/.codex/rules/` | command approval rules | auto-approves common read-only development, Linux, package metadata, and diagnostics commands |
 | `~/.codex/config.toml` | baseline config | plugins, MCP servers, approvals, docs discovery |
 
@@ -219,9 +219,22 @@ Subagents use role-based allowlist emulation through `[[skills.config]] enabled 
 
 ### Project Profile And Context
 
-`$profile` stores project-local capability guidance in `.codex/starter-profile.json`. On a new project, the SessionStart hook asks whether auto-detection should be enabled; `$profile setup` detects conventional Python, Node, Go, Rust, and container signals after confirmation. `$profile status` and `$profile refresh` are available on later sessions.
+`$profile` stores project-local capability guidance in `.codex/starter-profile.json`. On a new project, the SessionStart hook asks whether auto-detection should be enabled; `$profile setup` detects conventional Python, Node, Go, Rust, and container signals after confirmation. It also writes `.codex/capabilities.toml`, an editable project capability file with top-level sections such as `[python]` and `[node]`. `$profile status` and `$profile refresh` are available on later sessions.
 
 `$context status` reports the active catalogue mode. `$context compact` keeps every starter skill available while replacing only its short catalogue description with a concise one; the full `SKILL.md` instructions remain unchanged. `$context full` restores the original descriptions from a backup stored beside the globally installed skills, so it works from any project. These changes take effect on the next Codex startup. They do not control Codex built-in tools, remote MCP schemas, or the fixed skills-context allocation. `$context truncate` deliberately does not disable skills automatically; use `$profile` to guide tool selection without unexpected capability loss.
+
+### TDD Harness
+
+`$harness` manages the local RED/GREEN/REFACTOR state in `.gauntlet`. The installed hooks enforce the active capability profile:
+
+- RED allows test changes only.
+- GREEN freezes the current test snapshot and allows production changes only.
+- REFACTOR/DESIGN keeps tests frozen and requires behavior-preserving cleanup.
+- Delivery commands such as `git commit`, `git push`, and PR creation are blocked until the cycle is out of RED/GREEN and the configured harness passes.
+
+Harness commands live in `.codex/capabilities.toml` as plain strings, for example `harness = ["uv run ruff check $PROJECT_ROOT", "uv run pytest -q"]`. The harness expands `$PROJECT_ROOT`, `$HARNESS_CHANGED_FILES`, and `$HARNESS_CHANGED_PY` with shell-quoted paths before running commands from the git root.
+
+`.gauntlet` and `.harness` are local state files and are ignored by this starter kit. Use `$harness off` only by explicit user request for debugging or legacy work; normal GREEN work must stop rather than edit tests.
 
 ## Safety Model
 

@@ -1,0 +1,57 @@
+# Starter-kit default capability catalogue.
+# Project-specific overrides live in .codex/capabilities.toml.
+
+[python]
+detect_files = ["pyproject.toml", "requirements*.txt", "setup.py", "setup.cfg", "tox.ini"]
+skills = ["python-pro", "testing-patterns", "clean-code"]
+hooks = ["tdd-harness"]
+mcp = []
+test_roots = ["tests", "test", "proxy/tests"]
+source_roots = ["src", "app", "proxy", "scripts"]
+harness = [
+  "uv run ruff check $PROJECT_ROOT",
+  "uv run mypy $PROJECT_ROOT",
+  "uv run pytest -q"
+]
+
+[node]
+detect_files = ["package.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb"]
+skills = ["typescript-pro", "javascript-pro", "testing-patterns", "clean-code"]
+hooks = ["tdd-harness"]
+mcp = []
+test_roots = ["tests", "test", "__tests__", "src"]
+source_roots = ["src", "app", "lib", "server"]
+harness = [
+  "npm test"
+]
+
+[go]
+detect_files = ["go.mod"]
+skills = ["testing-patterns", "clean-code"]
+hooks = ["tdd-harness"]
+mcp = []
+test_roots = ["."]
+source_roots = ["."]
+harness = [
+  "go test ./..."
+]
+
+[rust]
+detect_files = ["Cargo.toml"]
+skills = ["testing-patterns", "clean-code"]
+hooks = ["tdd-harness"]
+mcp = []
+test_roots = ["tests", "src"]
+source_roots = ["src"]
+harness = [
+  "cargo test"
+]
+
+[ops]
+detect_files = ["Dockerfile", "compose.yaml", "docker-compose.yml"]
+skills = ["docker-expert", "linux-sysadmin"]
+hooks = []
+mcp = []
+test_roots = []
+source_roots = []
+harness = []

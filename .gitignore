@@ -10,6 +10,8 @@ __pycache__/
 .cache/
 .claude-bridge/
 .codex/claude-bridge/
+.gauntlet
+.harness
 .serena/
 dist/
 build/

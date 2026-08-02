@@ -53,17 +53,20 @@ digraph tdd_cycle {
     verify_red [label="Verify fails\ncorrectly", shape=diamond];
     green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
     verify_green [label="Verify passes\nAll green", shape=diamond];
-    refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
-    next [label="Next", shape=ellipse];
+    stop [label="STOP\nReport design options", shape=box, style=filled, fillcolor="#fff2cc"];
+    refactor [label="REFACTOR/DESIGN\nImprove shape only", shape=box, style=filled, fillcolor="#ccccff"];
+    next [label="Next test", shape=ellipse];
 
     red -> verify_red;
     verify_red -> green [label="yes"];
     verify_red -> red [label="wrong\nfailure"];
     green -> verify_green;
-    verify_green -> refactor [label="yes"];
+    verify_green -> stop [label="yes"];
     verify_green -> green [label="no"];
+    stop -> refactor [label="approved"];
+    stop -> next [label="continue"];
     refactor -> verify_green [label="stay\ngreen"];
-    verify_green -> next;
+    verify_green -> next [label="done"];
     next -> red;
 }
 ```
@@ -182,14 +185,31 @@ Confirm:
 
 **Other tests fail?** Fix now.
 
-### REFACTOR - Clean Up
+### STOP - Design Assessment
+
+After GREEN passes, stop before refactoring. Summarize briefly:
+
+- What behavior is now covered
+- Why the implementation is minimal
+- Duplication, hidden duplication, unclear names, coupling, or other code smells
+- The smallest behavior-preserving refactor/design move, if any
+- The likely next RED test
+
+Do not automatically start a broad refactor. Ask whether to refactor/design now, continue with the next RED test, or stop.
+
+### REFACTOR/DESIGN - Improve Shape
 
 After green only:
 - Remove duplication
+- Remove hidden duplication in concepts, branching, setup, error handling, or data shape
 - Improve names
 - Extract helpers
+- Improve object boundaries and dependency direction
+- Keep behavior unchanged
 
-Keep tests green. Don't add behavior.
+Run the full harness after every refactor step. If tests need to change, stop: that is a new RED phase or requires explicit human permission.
+
+Commit after the full RED -> GREEN -> REFACTOR/DESIGN cycle unless the human asks for finer commits.
 
 ### Repeat
 
