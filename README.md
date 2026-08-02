@@ -219,9 +219,9 @@ Subagents use role-based allowlist emulation through `[[skills.config]] enabled 
 
 ### Project Profile And Context
 
-`/profile` stores project-local capability guidance in `.codex/starter-profile.json`. On a new project, the SessionStart hook asks whether auto-detection should be enabled; `/profile setup` detects conventional Python, Node, Go, Rust, and container signals after confirmation. `/profile status` and `/profile refresh` are available on later sessions.
+`/project-profile` stores project-local capability guidance in `.codex/starter-profile.json`. On a new project, the SessionStart hook asks whether auto-detection should be enabled; `/project-profile setup` detects conventional Python, Node, Go, Rust, and container signals after confirmation. `/project-profile status` and `/project-profile refresh` are available on later sessions.
 
-`/context status` reports the active catalogue mode. `/context compact` keeps every starter skill available while replacing only its short catalogue description with a concise one; the full `SKILL.md` instructions remain unchanged. `/context full` restores the original descriptions from a backup stored beside the globally installed skills, so it works from any project. These changes take effect on the next Codex startup. They do not control Codex built-in tools, remote MCP schemas, or the fixed skills-context allocation. `/context truncate` deliberately does not disable skills automatically; use `/profile` to guide tool selection without unexpected capability loss.
+`/context status` reports the active catalogue mode. `/context compact` keeps every starter skill available while replacing only its short catalogue description with a concise one; the full `SKILL.md` instructions remain unchanged. `/context full` restores the original descriptions from a backup stored beside the globally installed skills, so it works from any project. These changes take effect on the next Codex startup. They do not control Codex built-in tools, remote MCP schemas, or the fixed skills-context allocation. `/context truncate` deliberately does not disable skills automatically; use `/project-profile` to guide tool selection without unexpected capability loss.
 
 ## Safety Model
 

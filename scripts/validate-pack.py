@@ -28,7 +28,7 @@ for path in sorted((root / "skills").glob("*/SKILL.md")):
     text = path.read_text(errors="replace")
     if not text.startswith("---"):
         errors.append(f"{path}: missing YAML frontmatter")
-for skill_name in ["profile", "context"]:
+for skill_name in ["project-profile", "context"]:
     if not (root / "skills" / skill_name / "SKILL.md").exists():
         errors.append(f"skills/{skill_name}/SKILL.md: missing required starter control skill")
 for path in sorted((root / "plugins").glob("*/.codex-plugin/plugin.json")):

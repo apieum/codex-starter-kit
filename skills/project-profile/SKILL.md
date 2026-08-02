@@ -1,11 +1,11 @@
 ---
-name: profile
+name: project-profile
 description: Project capability profile workflow.
 ---
 
 # Project Profile
 
-Use this skill when the user invokes `/profile`.
+Use this skill when the user invokes `/project-profile`.
 
 - `status`: run `python3 "${CODEX_HOME:-$HOME/.codex}/starter-kit/project_profile.py" status` and report detected capabilities and context mode.
 - `setup` or `refresh`: explain the proposed detected capabilities, ask for confirmation, then run the matching command.
