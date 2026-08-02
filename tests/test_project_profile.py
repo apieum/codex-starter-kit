@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import subprocess
 import tempfile
 from pathlib import Path
 import sys
@@ -19,7 +21,23 @@ from project_profile import (
 )
 
 
+PROFILE_SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "project_profile.py"
+
+
 class ProjectProfileTests(unittest.TestCase):
+    def run_profile(self, root: Path, *args: str) -> dict[str, object]:
+        result = subprocess.run(
+            [sys.executable, str(PROFILE_SCRIPT), "--project", str(root), *args],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        payload = json.loads(result.stdout)
+        self.assertIsInstance(payload, dict)
+        return payload
+
     def test_detects_python_web_project(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -27,6 +45,13 @@ class ProjectProfileTests(unittest.TestCase):
 
             self.assertEqual(detect_capabilities(root), ["python"])
             self.assertEqual(detect_domains(root), ["backend", "web"])
+
+    def test_detects_python_project_from_source_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "script.py").write_text("print('hello')\n")
+
+            self.assertEqual(detect_capabilities(root), ["python"])
 
     def test_persists_project_profile_without_config_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -102,6 +127,46 @@ class ProjectProfileTests(unittest.TestCase):
             self.assertEqual(path, root / ".codex" / "capabilities.toml")
             self.assertIn("[python]", text)
             self.assertIn("harness =", text)
+
+    def test_adds_user_capability_and_keeps_it_on_refresh(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "pyproject.toml").write_text("[project]\nname = \"demo\"\n")
+
+            self.run_profile(root, "setup")
+
+            added = self.run_profile(root, "add", "node")
+            self.assertEqual(added["detected_capabilities"], ["python"])
+            self.assertEqual(added["user_capabilities"], ["node"])
+            self.assertEqual(added["disabled_capabilities"], [])
+            self.assertEqual(added["capabilities"], ["node", "python"])
+
+            refreshed = self.run_profile(root, "refresh")
+            self.assertEqual(refreshed["detected_capabilities"], ["python"])
+            self.assertEqual(refreshed["user_capabilities"], ["node"])
+            self.assertEqual(refreshed["capabilities"], ["node", "python"])
+            self.assertIn("[node]", (root / ".codex" / "capabilities.toml").read_text())
+
+    def test_removes_detected_capability_until_added_back(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "pyproject.toml").write_text("[project]\nname = \"demo\"\n")
+
+            self.run_profile(root, "setup")
+
+            removed = self.run_profile(root, "remove", "python")
+            self.assertEqual(removed["detected_capabilities"], ["python"])
+            self.assertEqual(removed["disabled_capabilities"], ["python"])
+            self.assertEqual(removed["capabilities"], ["lite"])
+
+            refreshed = self.run_profile(root, "refresh")
+            self.assertEqual(refreshed["detected_capabilities"], ["python"])
+            self.assertEqual(refreshed["disabled_capabilities"], ["python"])
+            self.assertEqual(refreshed["capabilities"], ["lite"])
+
+            added = self.run_profile(root, "add", "python")
+            self.assertEqual(added["disabled_capabilities"], [])
+            self.assertEqual(added["capabilities"], ["python"])
 
 
 if __name__ == "__main__":

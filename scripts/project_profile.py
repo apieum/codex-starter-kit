@@ -14,6 +14,7 @@ from typing import Any
 PROFILE_PATH = Path(".codex/starter-profile.json")
 PROJECT_CAPABILITIES_PATH = Path(".codex/capabilities.toml")
 CONTEXT_MODES = ("compact", "full", "truncate")
+PROFILE_COMMANDS = ("status", "setup", "refresh", "context", "add", "remove")
 
 
 def default_capabilities_path() -> Path:
@@ -52,6 +53,51 @@ def list_strings(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [item for item in value if isinstance(item, str) and item]
+
+
+def unique_sorted(values: list[str]) -> list[str]:
+    return sorted(set(values))
+
+
+def profile_names(profile: dict[str, Any], key: str) -> list[str]:
+    return unique_sorted(list_strings(profile.get(key)))
+
+
+def real_capability_names(names: list[str]) -> list[str]:
+    return [name for name in names if name != "lite"]
+
+
+def detect_real_capabilities(project_root: Path) -> list[str]:
+    return real_capability_names(detect_capabilities(project_root))
+
+
+def effective_capabilities(detected: list[str], user: list[str], disabled: list[str]) -> list[str]:
+    active = (set(detected) | set(user)) - set(disabled)
+    return sorted(active) or ["lite"]
+
+
+def sync_effective_capabilities(profile: dict[str, Any]) -> None:
+    detected = profile_names(profile, "detected_capabilities")
+    user = profile_names(profile, "user_capabilities")
+    disabled = profile_names(profile, "disabled_capabilities")
+    profile["detected_capabilities"] = detected
+    profile["user_capabilities"] = user
+    profile["disabled_capabilities"] = disabled
+    profile["capabilities"] = effective_capabilities(detected, user, disabled)
+
+
+def parse_capability_values(values: list[str]) -> list[str]:
+    names: list[str] = []
+    for value in values:
+        names.extend(part.strip() for part in value.split(",") if part.strip())
+    return unique_sorted(names)
+
+
+def validate_capability_values(names: list[str], catalog: dict[str, dict[str, Any]]) -> None:
+    unknown = [name for name in names if name not in catalog]
+    if unknown:
+        known = ", ".join(sorted(catalog)) or "none"
+        raise ValueError(f"unknown capabilities: {', '.join(unknown)}; known capabilities: {known}")
 
 
 def detect_catalog_capabilities(project_root: Path, catalog: dict[str, dict[str, Any]]) -> set[str]:
@@ -239,44 +285,80 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", type=Path, default=Path.cwd())
     parser.add_argument("--skills-home", type=Path, default=default_skills_home())
-    parser.add_argument("command", choices=("status", "setup", "refresh", "context"))
-    parser.add_argument("value", nargs="?")
+    parser.add_argument("command", choices=PROFILE_COMMANDS)
+    parser.add_argument("values", nargs="*")
     args = parser.parse_args()
     project = args.project.resolve()
     profile = load_profile(project)
 
     if args.command in {"setup", "refresh"}:
-        capabilities = detect_capabilities(project)
+        detected = detect_real_capabilities(project)
         profile.update(
             {
                 "auto_detect": True,
-                "capabilities": capabilities,
+                "detected_capabilities": detected,
+                "user_capabilities": profile_names(profile, "user_capabilities"),
+                "disabled_capabilities": profile_names(profile, "disabled_capabilities"),
                 "domains": detect_domains(project),
                 "context_mode": profile.get("context_mode", "compact"),
             }
         )
+        sync_effective_capabilities(profile)
         save_profile(project, profile)
-        write_project_capabilities(project, capabilities)
+        write_project_capabilities(project, profile["capabilities"])
     elif args.command == "context":
-        if args.value not in CONTEXT_MODES:
+        if len(args.values) != 1 or args.values[0] not in CONTEXT_MODES:
             parser.error("context requires compact, full, or truncate")
         profile.setdefault("auto_detect", True)
-        profile.setdefault("capabilities", detect_capabilities(project))
-        profile["context_mode"] = args.value
+        profile.setdefault("detected_capabilities", detect_real_capabilities(project))
+        profile.setdefault("user_capabilities", [])
+        profile.setdefault("disabled_capabilities", [])
+        sync_effective_capabilities(profile)
+        profile["context_mode"] = args.values[0]
         save_profile(project, profile)
         # Skills are installed globally, so their restoration record must not be
         # tied to the project that happened to enable compact mode.
         backup = args.skills_home / ".codex-starter-kit-descriptions.json"
-        if args.value == "compact":
+        if args.values[0] == "compact":
             compact_skill_descriptions(args.skills_home, backup)
-        elif args.value == "full":
+        elif args.values[0] == "full":
             restore_skill_descriptions(args.skills_home, backup)
+    elif args.command in {"add", "remove"}:
+        names = parse_capability_values(args.values)
+        if not names:
+            parser.error(f"{args.command} requires at least one capability")
+        try:
+            validate_capability_values(names, load_capability_catalog())
+        except ValueError as exc:
+            parser.error(str(exc))
+        profile.setdefault("auto_detect", True)
+        profile.setdefault("detected_capabilities", detect_real_capabilities(project))
+        profile.setdefault("user_capabilities", [])
+        profile.setdefault("disabled_capabilities", [])
+        profile.setdefault("domains", detect_domains(project))
+        profile.setdefault("context_mode", "compact")
+        user = set(profile_names(profile, "user_capabilities"))
+        disabled = set(profile_names(profile, "disabled_capabilities"))
+        if args.command == "add":
+            user.update(names)
+            disabled.difference_update(names)
+        else:
+            user.difference_update(names)
+            disabled.update(names)
+        profile["user_capabilities"] = sorted(user)
+        profile["disabled_capabilities"] = sorted(disabled)
+        sync_effective_capabilities(profile)
+        save_profile(project, profile)
+        write_project_capabilities(project, profile["capabilities"])
 
     print(
         json.dumps(
             {
                 "configured": bool(profile),
                 "capabilities": profile.get("capabilities", detect_capabilities(project)),
+                "detected_capabilities": profile.get("detected_capabilities", detect_real_capabilities(project)),
+                "user_capabilities": profile.get("user_capabilities", []),
+                "disabled_capabilities": profile.get("disabled_capabilities", []),
                 "domains": profile.get("domains", detect_domains(project)),
                 "context_mode": profile.get("context_mode", "compact"),
                 "project_capabilities": str(project / PROJECT_CAPABILITIES_PATH),

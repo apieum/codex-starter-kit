@@ -2,7 +2,7 @@
 # Project-specific overrides live in .codex/capabilities.toml.
 
 [python]
-detect_files = ["pyproject.toml", "requirements*.txt", "setup.py", "setup.cfg", "tox.ini"]
+detect_files = ["pyproject.toml", "requirements*.txt", "setup.py", "setup.cfg", "tox.ini", "*.py", "**/*.py"]
 skills = ["python-pro", "testing-patterns", "clean-code"]
 hooks = ["tdd-harness"]
 mcp = []

@@ -221,6 +221,8 @@ Subagents use role-based allowlist emulation through `[[skills.config]] enabled 
 
 `$profile` stores project-local capability guidance in `.codex/starter-profile.json`. On a new project, the SessionStart hook asks whether auto-detection should be enabled; `$profile setup` detects conventional Python, Node, Go, Rust, and container signals after confirmation. It also writes `.codex/capabilities.toml`, an editable project capability file with top-level sections such as `[python]` and `[node]`. `$profile status` and `$profile refresh` are available on later sessions.
 
+Manual project choices use separate profile entries so auto-detection does not overwrite them. `detected_capabilities` records the latest project scan, `user_capabilities` records capabilities added with `$profile add cap1 cap2`, `disabled_capabilities` records capabilities removed with `$profile remove cap1 cap2`, and `capabilities` is the effective list used by the harness. `$profile add` also clears matching disabled entries, so re-adding a detected capability enables it again.
+
 `$context status` reports the active catalogue mode. `$context compact` keeps every starter skill available while replacing only its short catalogue description with a concise one; the full `SKILL.md` instructions remain unchanged. `$context full` restores the original descriptions from a backup stored beside the globally installed skills, so it works from any project. These changes take effect on the next Codex startup. They do not control Codex built-in tools, remote MCP schemas, or the fixed skills-context allocation. `$context truncate` deliberately does not disable skills automatically; use `$profile` to guide tool selection without unexpected capability loss.
 
 ### TDD Harness
