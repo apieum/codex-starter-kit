@@ -96,6 +96,15 @@ def install_hooks(*, dry_run: bool, backup: bool, codex_home: Path) -> None:
     install_text(rendered, codex_home / "hooks.json", dry_run=dry_run, backup=backup, label="hooks config")
 
 
+def install_runtime_support(*, dry_run: bool, backup: bool, codex_home: Path) -> None:
+    runtime_dir = codex_home / "starter-kit"
+    backup_or_remove(runtime_dir, dry_run=dry_run, backup=backup)
+    print(f"write starter-kit runtime support -> {runtime_dir}")
+    if not dry_run:
+        runtime_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(REPO_ROOT / "scripts" / "project_profile.py", runtime_dir / "project_profile.py")
+
+
 def install_rules(*, dry_run: bool, backup: bool, codex_home: Path) -> None:
     rules_dir = codex_home / "rules"
     backup_or_remove(rules_dir, dry_run=dry_run, backup=backup)
@@ -243,6 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         install_skills(dry_run=args.dry_run, backup=backup, skills_home=skills_home)
     if not args.skip_hooks:
         install_hooks(dry_run=args.dry_run, backup=backup, codex_home=codex_home)
+    install_runtime_support(dry_run=args.dry_run, backup=backup, codex_home=codex_home)
     if not args.skip_rules:
         install_rules(dry_run=args.dry_run, backup=backup, codex_home=codex_home)
     if not args.skip_plugins:
