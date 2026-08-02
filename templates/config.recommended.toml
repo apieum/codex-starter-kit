@@ -5,15 +5,15 @@
 
 model = "gpt-5.5"
 model_reasoning_effort = "high"
-approval_policy = "never"
-sandbox_mode = "danger-full-access"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
 web_search = "cached"
 suppress_unstable_features_warning = true
 project_doc_fallback_filenames = ["CLAUDE.md", ".agents.md"]
 project_doc_max_bytes = 65536
 
 [sandbox_workspace_write]
-network_access = true
+network_access = false
 
 [agents]
 max_threads = 6
@@ -44,25 +44,25 @@ hooks = true
 [mcp_servers.context7]
 url = "https://mcp.context7.com/mcp"
 enabled = true
-default_tools_approval_mode = "approve"
+default_tools_approval_mode = "prompt"
 
 # Vue Docs MCP source: https://github.com/joelbarmettlerUZH/vue-mcp
 [mcp_servers.vue-docs]
 url = "https://mcp.vue-mcp.org/mcp"
 enabled = true
-default_tools_approval_mode = "approve"
+default_tools_approval_mode = "prompt"
 
 # Nuxt UI source: https://github.com/nuxt/ui
 [mcp_servers.nuxt-ui-remote]
 url = "https://ui.nuxt.com/mcp"
 enabled = true
-default_tools_approval_mode = "approve"
+default_tools_approval_mode = "prompt"
 
 # Nuxt source: https://github.com/nuxt/nuxt
 [mcp_servers.nuxt-remote]
 url = "https://nuxt.com/mcp"
 enabled = true
-default_tools_approval_mode = "approve"
+default_tools_approval_mode = "prompt"
 
 # Recommended local MCP/plugin examples for the full starter-kit experience.
 # They are commented because they need local daemons, machine-specific paths,
@@ -72,25 +72,25 @@ default_tools_approval_mode = "approve"
 # [mcp_servers.serena]
 # url = "http://127.0.0.1:9400/mcp"
 # bearer_token_env_var = "CODEX_MCP_BEARER"
-# default_tools_approval_mode = "approve"
+# default_tools_approval_mode = "prompt"
 #
 # GitNexus source: https://github.com/abhigyanpatwari/GitNexus
 # [mcp_servers.gitnexus]
 # url = "http://127.0.0.1:9401/api/mcp"
 # bearer_token_env_var = "CODEX_MCP_BEARER"
-# default_tools_approval_mode = "approve"
+# default_tools_approval_mode = "prompt"
 #
 # Postgres MCP source: https://github.com/modelcontextprotocol/servers
 # [mcp_servers.postgres]
 # url = "http://127.0.0.1:9402/mcp"
 # bearer_token_env_var = "CODEX_MCP_BEARER"
-# default_tools_approval_mode = "approve"
+# default_tools_approval_mode = "prompt"
 #
 # Open Design source: https://github.com/nexu-io/open-design
 # [mcp_servers.open-design]
 # command = "node"
 # args = ["/path/to/open-design/apps/daemon/dist/cli.js", "mcp", "--daemon-url", "http://127.0.0.1:3501"]
-# default_tools_approval_mode = "approve"
+# default_tools_approval_mode = "prompt"
 #
 # claude-mem source: https://github.com/thedotmack/claude-mem
 # Install/setup with:

@@ -17,6 +17,9 @@ for path in sorted((root / "agents").glob("*.toml")):
         continue
     if data.get("name") != path.stem:
         errors.append(f"{path}: name does not match filename")
+    for server_name, server in data.get("mcp_servers", {}).items():
+        if server.get("default_tools_approval_mode") != "prompt":
+            errors.append(f"{path}: {server_name} MCP tools must prompt for approval")
     for item in data.get("skills", {}).get("config", []):
         skill_path = str(item.get("path", ""))
         if "/.codex/plugins/cache/" in skill_path or "/.codex/skills/.system/" in skill_path:
@@ -59,6 +62,12 @@ except Exception as exc:
 else:
     if not config.get("features", {}).get("hooks"):
         errors.append("templates/config.recommended.toml: hooks feature is not enabled")
+    if config.get("approval_policy") != "on-request":
+        errors.append("templates/config.recommended.toml: approval_policy must be on-request")
+    if config.get("sandbox_mode") != "workspace-write":
+        errors.append("templates/config.recommended.toml: sandbox_mode must be workspace-write")
+    if config.get("sandbox_workspace_write", {}).get("network_access") is not False:
+        errors.append("templates/config.recommended.toml: workspace shell network access must be disabled")
     for plugin in ["github@openai-curated"]:
         if not config.get("plugins", {}).get(plugin, {}).get("enabled"):
             errors.append(f"templates/config.recommended.toml: plugin {plugin} is not enabled")
@@ -76,6 +85,8 @@ else:
     for server in ["context7", "vue-docs", "nuxt-ui-remote", "nuxt-remote"]:
         if server not in config.get("mcp_servers", {}):
             errors.append(f"templates/config.recommended.toml: missing MCP server {server}")
+        elif config["mcp_servers"][server].get("default_tools_approval_mode") != "prompt":
+            errors.append(f"templates/config.recommended.toml: {server} MCP tools must prompt for approval")
 for hook_name in [
     "block-dangerous-shell.py",
     "handoff-permission-request.py",
@@ -86,6 +97,11 @@ for hook_name in [
         ast.parse((root / "hooks" / hook_name).read_text(encoding="utf-8"))
     except Exception as exc:
         errors.append(f"hooks/{hook_name}: syntax check failed: {exc}")
+permission_hook = (root / "hooks" / "handoff-permission-request.py").read_text(encoding="utf-8")
+if 'tool_name.startswith("mcp__")' in permission_hook:
+    errors.append("hooks/handoff-permission-request.py: MCP tools must not be auto-approved")
+if "is_handoff_service_control" in permission_hook:
+    errors.append("hooks/handoff-permission-request.py: service controls must not be auto-approved")
 try:
     hooks_config = json.loads((root / "hooks" / "hooks.template.json").read_text(encoding="utf-8"))
 except Exception as exc:
@@ -103,7 +119,16 @@ else:
     if len(prefix_rules) < 100:
         errors.append("rules/default.rules: expected broad read-only command allowlist")
     for unsafe in [
+        'pattern = ["gio", "trash"]',
+        'pattern = ["cp"]',
+        'pattern = ["python"]',
+        'pattern = ["python3"]',
+        'pattern = ["pnpm"]',
+        'pattern=["systemctl"]',
+        'pattern=["git"]',
+        'pattern=["curl"]',
         'pattern=["pnpm", "install"]',
+        'pattern=["npm", "install"]',
         'pattern=["yarn", "install"]',
         'pattern=["gh", "repo"]',
         'pattern=["kubectl", "apply"]',

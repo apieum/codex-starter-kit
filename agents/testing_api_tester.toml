@@ -323,17 +323,17 @@ Use this policy in interactive and spawned-agent work. Keep it short in your wor
 [mcp_servers.vue-docs]
 url = "https://mcp.vue-mcp.org/mcp"
 enabled = false
-default_tools_approval_mode = "approve"
+default_tools_approval_mode = "prompt"
 
 [mcp_servers.nuxt-ui-remote]
 url = "https://ui.nuxt.com/mcp"
 enabled = false
-default_tools_approval_mode = "approve"
+default_tools_approval_mode = "prompt"
 
 [mcp_servers.nuxt-remote]
 url = "https://nuxt.com/mcp"
 enabled = false
-default_tools_approval_mode = "approve"
+default_tools_approval_mode = "prompt"
 
 # BEGIN ROLE-BASED SKILL WHITELIST EMULATION
 # Profile: api_test

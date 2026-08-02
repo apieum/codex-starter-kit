@@ -6,45 +6,10 @@ prefix_rule(
 )
 
 prefix_rule(
-    pattern = ["gio", "trash"],
-    decision = "allow",
-    justification = "Recoverable deletion through the desktop trash is approved; permanent rm/rmdir/unlink remains blocked by the safety hook.",
-    match = ["gio trash .serena", "gio trash build-cache"],
-)
-
-prefix_rule(
-    pattern = ["cp"],
-    decision = "allow",
-    justification = "File copy is approved for autonomous handoff workflows. Sandbox scope and safety hooks still apply; destructive deletion commands remain blocked.",
-    match = ["cp source.txt dest.txt", "cp -R src dest"],
-)
-
-prefix_rule(
     pattern = ["printf"],
     decision = "allow",
     justification = "printf is approved for autonomous handoff workflows. Safety hooks still inspect shell control operators and destructive follow-up commands.",
     match = ["printf '%s\\n' ok"],
-)
-
-prefix_rule(
-    pattern = ["python3"],
-    decision = "allow",
-    justification = "python3 is approved for autonomous handoff workflows by user preference. Safety hooks still block explicitly destructive shell commands.",
-    match = ["python3 script.py", "python3 -m pytest"],
-)
-
-prefix_rule(
-    pattern = ["python"],
-    decision = "allow",
-    justification = "python is approved for autonomous handoff workflows by user preference. Safety hooks still block explicitly destructive shell commands.",
-    match = ["python script.py", "python -m pytest"],
-)
-
-prefix_rule(
-    pattern = ["pnpm"],
-    decision = "allow",
-    justification = "pnpm is approved for autonomous handoff workflows by user preference. The safety hook still blocks publish/deploy/release and other critical mutations.",
-    match = ["pnpm install", "pnpm test", "pnpm -C app build"],
 )
 
 prefix_rule(
@@ -103,19 +68,6 @@ prefix_rule(
     match = ["shutdown now"],
 )
 
-prefix_rule(pattern=["systemctl"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference. Host power commands remain guarded separately when invoked as reboot/shutdown/poweroff.")
-prefix_rule(pattern=["systemctl", "--user"], decision="allow", justification="User-level systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "start"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "stop"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "restart"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "reload"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "enable"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "disable"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "mask"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "kill"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "--user", "kill"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-prefix_rule(pattern=["systemctl", "daemon-reload"], decision="allow", justification="systemctl is fully approved for autonomous handoff workflows by explicit user preference.")
-
 prefix_rule(
     pattern = ["chmod"],
     decision = "prompt",
@@ -131,27 +83,6 @@ prefix_rule(
 )
 
 prefix_rule(
-    pattern = ["git", "reset"],
-    decision = "allow",
-    justification = "Git commands are globally approved by user preference. The pre-tool safety hook still blocks destructive reset forms such as git reset --hard.",
-    match = ["git reset --hard", "git reset --hard HEAD"],
-)
-
-prefix_rule(
-    pattern = ["git", "clean"],
-    decision = "allow",
-    justification = "Git commands are globally approved by user preference. The pre-tool safety hook still blocks git clean because it deletes untracked files.",
-    match = ["git clean -fd", "git clean -fdx"],
-)
-
-prefix_rule(
-    pattern = ["git", "push"],
-    decision = "allow",
-    justification = "Git commands are globally approved by user preference. The pre-tool safety hook still blocks force push unless explicitly handled.",
-    match = ["git push --force", "git push -f origin main"],
-)
-
-prefix_rule(
     pattern = ["wipefs"],
     decision = "forbidden",
     justification = "Filesystem signature wiping is blocked. This must be performed manually by the user.",
@@ -164,15 +95,9 @@ prefix_rule(
     justification = "Docker prune can delete containers, images, networks, and cache. Inspect usage first and ask for exact cleanup approval.",
     match = ["docker system prune -af"],
 )
-prefix_rule(pattern=["git", "commit"], decision="allow")
 prefix_rule(pattern=["git", "rev-parse"], decision="allow")
-prefix_rule(pattern=["git", "fetch"], decision="allow")
-prefix_rule(pattern=["git", "add"], decision="allow")
-prefix_rule(pattern=["git", "switch"], decision="allow")
-prefix_rule(pattern=["git"], decision="allow")
 prefix_rule(pattern=["npm", "view"], decision="allow")
 prefix_rule(pattern=["npx", "gitnexus", "analyze"], decision="allow")
-prefix_rule(pattern=["npm", "install"], decision="allow")
 prefix_rule(pattern=["npm", "info"], decision="allow")
 prefix_rule(pattern=["npm", "search"], decision="allow")
 prefix_rule(pattern=["npm", "ping"], decision="allow")
@@ -329,11 +254,6 @@ prefix_rule(pattern=["systemctl", "list-timers"], decision="allow")
 prefix_rule(pattern=["systemctl", "show"], decision="allow")
 prefix_rule(pattern=["systemctl", "cat"], decision="allow")
 prefix_rule(pattern=["journalctl", "-u"], decision="allow")
-prefix_rule(pattern=["systemctl", "--user", "start"], decision="allow")
-prefix_rule(pattern=["systemctl", "--user", "stop"], decision="allow")
-prefix_rule(pattern=["systemctl", "--user", "restart"], decision="allow")
-prefix_rule(pattern=["systemctl", "--user", "reload"], decision="allow")
-prefix_rule(pattern=["service"], decision="allow")
 prefix_rule(pattern=["pm2", "status"], decision="allow")
 prefix_rule(pattern=["pm2", "list"], decision="allow")
 prefix_rule(pattern=["pm2", "jlist"], decision="allow")
@@ -341,26 +261,11 @@ prefix_rule(pattern=["pm2", "prettylist"], decision="allow")
 prefix_rule(pattern=["pm2", "describe"], decision="allow")
 prefix_rule(pattern=["pm2", "info"], decision="allow")
 prefix_rule(pattern=["pm2", "logs"], decision="allow")
-prefix_rule(pattern=["pm2", "start"], decision="allow")
-prefix_rule(pattern=["pm2", "stop"], decision="allow")
-prefix_rule(pattern=["pm2", "restart"], decision="allow")
-prefix_rule(pattern=["pm2", "reload"], decision="allow")
-prefix_rule(pattern=["pm2", "gracefulReload"], decision="allow")
 prefix_rule(pattern=["supervisorctl", "status"], decision="allow")
-prefix_rule(pattern=["supervisorctl", "start"], decision="allow")
-prefix_rule(pattern=["supervisorctl", "stop"], decision="allow")
-prefix_rule(pattern=["supervisorctl", "restart"], decision="allow")
-prefix_rule(pattern=["supervisorctl", "reread"], decision="allow")
-prefix_rule(pattern=["supervisorctl", "update"], decision="allow")
 prefix_rule(pattern=["nginx", "-t"], decision="allow")
-prefix_rule(pattern=["nginx", "-s", "reload"], decision="allow")
 prefix_rule(pattern=["angie", "-t"], decision="allow")
-prefix_rule(pattern=["angie", "-s", "reload"], decision="allow")
 prefix_rule(pattern=["apachectl", "configtest"], decision="allow")
-prefix_rule(pattern=["apachectl", "graceful"], decision="allow")
-prefix_rule(pattern=["apachectl", "restart"], decision="allow")
 prefix_rule(pattern=["caddy", "validate"], decision="allow")
-prefix_rule(pattern=["caddy", "reload"], decision="allow")
 prefix_rule(pattern=["docker", "ps"], decision="allow")
 prefix_rule(pattern=["docker", "logs"], decision="allow")
 prefix_rule(pattern=["docker", "inspect"], decision="allow")
@@ -372,18 +277,6 @@ prefix_rule(pattern=["docker", "compose", "ps"], decision="allow")
 prefix_rule(pattern=["docker", "compose", "logs"], decision="allow")
 prefix_rule(pattern=["docker", "compose", "config"], decision="allow")
 prefix_rule(pattern=["docker", "compose", "ls"], decision="allow")
-prefix_rule(pattern=["docker", "start"], decision="allow")
-prefix_rule(pattern=["docker", "stop"], decision="allow")
-prefix_rule(pattern=["docker", "restart"], decision="allow")
-prefix_rule(pattern=["docker", "compose", "start"], decision="allow")
-prefix_rule(pattern=["docker", "compose", "stop"], decision="allow")
-prefix_rule(pattern=["docker", "compose", "restart"], decision="allow")
-prefix_rule(pattern=["docker", "compose", "up", "-d"], decision="allow")
-prefix_rule(pattern=["docker", "compose", "pull"], decision="allow")
-prefix_rule(pattern=["docker", "compose", "build"], decision="allow")
-prefix_rule(pattern=["podman", "start"], decision="allow")
-prefix_rule(pattern=["podman", "stop"], decision="allow")
-prefix_rule(pattern=["podman", "restart"], decision="allow")
 prefix_rule(pattern=["kubectl", "version"], decision="allow")
 prefix_rule(pattern=["kubectl", "get"], decision="allow")
 prefix_rule(pattern=["kubectl", "describe"], decision="allow")
@@ -414,14 +307,12 @@ prefix_rule(pattern=["gh", "pr", "view"], decision="allow")
 prefix_rule(pattern=["gh", "pr", "list"], decision="allow")
 prefix_rule(pattern=["gh", "pr", "checks"], decision="allow")
 prefix_rule(pattern=["gh", "pr", "diff"], decision="allow")
-prefix_rule(pattern=["gh", "pr", "create"], decision="allow")
 prefix_rule(pattern=["gh", "issue", "view"], decision="allow")
 prefix_rule(pattern=["gh", "issue", "list"], decision="allow")
 prefix_rule(pattern=["gh", "run", "list"], decision="allow")
 prefix_rule(pattern=["gh", "run", "view"], decision="allow")
 prefix_rule(pattern=["curl", "-I"], decision="allow")
 prefix_rule(pattern=["curl", "--head"], decision="allow")
-prefix_rule(pattern=["curl"], decision="allow")
 prefix_rule(pattern=["wget", "--spider"], decision="allow")
 prefix_rule(pattern=["dig"], decision="allow")
 prefix_rule(pattern=["nslookup"], decision="allow")
@@ -534,13 +425,3 @@ prefix_rule(pattern=["task", "check"], decision="allow")
 prefix_rule(pattern=["task", "build"], decision="allow")
 prefix_rule(pattern=["task", "format"], decision="allow")
 prefix_rule(pattern=["task", "verify"], decision="allow")
-prefix_rule(pattern=["pnpm", "--filter"], decision="allow")
-prefix_rule(pattern=["pnpm", "-F"], decision="allow")
-prefix_rule(pattern=["pnpm", "--recursive"], decision="allow")
-prefix_rule(pattern=["pnpm", "-r"], decision="allow")
-prefix_rule(pattern=["pnpm", "--dir"], decision="allow")
-prefix_rule(pattern=["pnpm", "-C"], decision="allow")
-prefix_rule(pattern=["npm", "--workspace"], decision="allow")
-prefix_rule(pattern=["npm", "-w"], decision="allow")
-prefix_rule(pattern=["npm", "--workspaces"], decision="allow")
-prefix_rule(pattern=["npm", "--prefix"], decision="allow")
