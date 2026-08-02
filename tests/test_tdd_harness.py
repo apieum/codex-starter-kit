@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 import unittest
+from unittest import mock
 
 
 HARNESS_PATH = Path(__file__).resolve().parents[1] / "hooks" / "tdd-harness.py"
@@ -16,6 +17,51 @@ SPEC.loader.exec_module(tdd_harness)
 
 
 class TddHarnessTests(unittest.TestCase):
+    def test_disabled_harness_does_not_block_delivery(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".harness").write_text("debugging\n", encoding="utf-8")
+            payload = {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "exec_command",
+                "tool_input": {"workdir": str(root), "command": "git commit -m test"},
+            }
+
+            with mock.patch.object(tdd_harness, "emit_block") as emit_block:
+                self.assertEqual(tdd_harness.handle_hook(payload), 0)
+
+            emit_block.assert_not_called()
+
+    def test_harness_control_command_skips_pretool_verification(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            payload = {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "exec_command",
+                "tool_input": {
+                    "workdir": directory,
+                    "command": "python3 /tmp/tdd-harness.py status",
+                },
+            }
+
+            with mock.patch.object(tdd_harness, "verify_role", side_effect=AssertionError):
+                self.assertEqual(tdd_harness.handle_hook(payload), 0)
+
+    def test_active_harness_blocks_delivery_when_verification_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            payload = {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "exec_command",
+                "tool_input": {"workdir": directory, "command": "git commit -m test"},
+            }
+
+            with (
+                mock.patch.object(tdd_harness, "verify_role", return_value="verification failed"),
+                mock.patch.object(tdd_harness, "emit_block") as emit_block,
+            ):
+                self.assertEqual(tdd_harness.handle_hook(payload), 0)
+
+            emit_block.assert_called_once_with("Delivery command refused until harness passes.\n\nverification failed")
+
     def test_green_freezes_current_tests_not_head(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

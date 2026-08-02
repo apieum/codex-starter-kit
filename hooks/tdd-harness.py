@@ -284,6 +284,17 @@ def is_delivery_command(command: str) -> bool:
     return False
 
 
+def is_harness_control_command(command: str) -> bool:
+    try:
+        tokens = shlex.split(command, posix=True)
+    except ValueError:
+        return False
+    for index, token in enumerate(tokens[:-1]):
+        if Path(token).name == "tdd-harness.py":
+            return tokens[index + 1] in {"status", "off", "on", "run"}
+    return False
+
+
 def quote_paths(root: Path, paths: list[str], pattern: str | None = None) -> str:
     selected = paths
     if pattern:
@@ -375,17 +386,14 @@ def handle_hook(payload: dict[str, Any]) -> int:
     event = str(payload.get("hook_event_name") or payload.get("hookEventName") or "")
     tool_name = str(payload.get("tool_name", ""))
 
+    if command and is_harness_control_command(command):
+        return 0
+
     if (root / DISABLED_FILE).exists():
-        if event == "PreToolUse" and command and is_delivery_command(command):
-            emit_block(
-                "Delivery command refused: project harness is disabled by .harness. "
-                "Re-enable it with $harness on and pass the harness before committing, pushing, or creating a PR."
-            )
-        else:
-            emit_context(
-                "Project harness is disabled by .harness. "
-                "Do not claim completion; re-enable it with $harness on when debugging is finished."
-            )
+        emit_context(
+            "Project harness is disabled by .harness. "
+            "Do not claim completion; re-enable it with $harness on when debugging is finished."
+        )
         return 0
 
     if event == "PreToolUse" and command and is_delivery_command(command):
@@ -402,7 +410,7 @@ def handle_hook(payload: dict[str, Any]) -> int:
             emit_block("Delivery command refused until harness passes.\n\n" + violation)
         return 0
 
-    if event == "PostToolUse" or tool_name:
+    if event == "PostToolUse":
         violation = verify_role(root)
         if violation:
             print(violation, file=sys.stderr)
