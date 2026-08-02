@@ -7,12 +7,28 @@ Codex starts with a minimal bootstrap profile, selects a persistent project
 profile when one is missing, and validates the selected profile on every later
 session start.
 
+## Commands
+
+The user-facing interfaces are `/profile` for project capabilities and
+`/context` for context budget. They are implemented as concise enabled skills
+that invoke deterministic local scripts.
+
+`/profile` supports setup, automatic-detection preference, manual capability
+selection, refresh, and status. `/context low|medium|high` persists a context
+budget independently of capabilities.
+
 ## Profiles
 
-The initial profile set is `lite`, `web`, `backend`, `data`, `ops`, `security`,
-and `full`. Each profile declares enabled MCP servers, hooks, and skill bundles.
+The initial capability set is `web`, `backend`, `data`, `ops`, and `security`.
+The detector composes them from language and framework files such as
+`pyproject.toml`, `package.json`, `go.mod`, and `Cargo.toml`. Each capability
+declares enabled MCP servers, hooks, and skill bundles.
 `lite` is the fallback for unknown or empty repositories and has no remote MCP
 servers or per-prompt classifier.
+
+The independent context budgets are `low`, `medium`, and `high`. They control
+instruction, skill, hook, and tool-surface breadth, never permissions. `high`
+does not enable undeclared external services or mutating tools.
 
 ## Startup Flow
 
